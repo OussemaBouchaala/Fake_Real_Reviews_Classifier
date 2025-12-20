@@ -1,0 +1,14 @@
+{
+  "paths": {
+    "data_dir": "../data",
+    "models_dir": "../models",
+    "notebooks_dir": "../notebooks",
+    "app_dir": "../app",
+    "fake_reviews_dataset": "../data/fake reviews dataset.csv",
+    "teams_dataset": "../data/teams.csv",
+    "tfidf_vectorizer": "../models/tfidf_vectorizer.pkl",
+    "svm_model": "../models/linear_svm_model_adv.pkl",
+    "svm_model_basic": "../models/linear_svm_model.pkl",
+    "notebook": "../notebooks/notebook.ipynb"
+  }
+}

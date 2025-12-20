@@ -5,10 +5,15 @@ import string
 import numpy as np
 from nltk.corpus import stopwords
 from scipy.sparse import hstack
+from pathlib import Path
+
+# Import centralized configuration
+from config import TFIDF_VECTORIZER, SVM_MODEL
 
 # -------- Load model & vectorizer --------
-tfidf = joblib.load("tfidf_vectorizer.pkl")
-model = joblib.load("linear_svm_model_adv.pkl")
+project_root = Path(__file__).parent.parent
+tfidf = joblib.load(project_root / TFIDF_VECTORIZER)
+model = joblib.load(project_root / SVM_MODEL)
 
 # -------- Stopwords --------
 stop_words = set(stopwords.words("english"))
