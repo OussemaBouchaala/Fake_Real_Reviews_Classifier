@@ -11,9 +11,10 @@ from pathlib import Path
 from config import TFIDF_VECTORIZER, SVM_MODEL
 
 # -------- Load model & vectorizer --------
-project_root = Path(__file__).parent.parent
-tfidf = joblib.load(project_root / TFIDF_VECTORIZER)
-model = joblib.load(project_root / SVM_MODEL)
+# config.json paths are relative to the app/ folder
+app_dir = Path(__file__).parent
+tfidf = joblib.load(app_dir / TFIDF_VECTORIZER)
+model = joblib.load(app_dir / SVM_MODEL)
 
 # -------- Stopwords --------
 stop_words = set(stopwords.words("english"))

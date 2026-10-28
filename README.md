@@ -1,55 +1,77 @@
-# Fake Review Detection System
+<h1 align="center">🕵️ Fake Review Detector</h1>
+<p align="center">Paste a product review and find out if it looks <b>real</b> or <b>computer-generated / fake</b>.<br/>
+<b>Python · NLP · scikit-learn · NLTK · Streamlit · Docker</b></p>
 
-A machine learning-powered web application that detects fake reviews using text analysis and behavioral patterns.
+---
 
-## Features
+## Problem
 
-- **Text Analysis**: TF-IDF vectorization to analyze review content
-- **Behavioral Features**: Detects patterns like excessive punctuation, repetition, and capitalization
-- **ML Classification**: Linear SVM model for accurate fake/real classification
-- **Web Interface**: Interactive Streamlit application for real-time predictions
+Online stores are flooded with fake reviews that mislead buyers and hurt honest sellers. Reading every review by hand to spot them does not scale.
 
-## Project Structure
+## Solution
 
+A lightweight NLP classifier that combines **what a review says** (TF-IDF on cleaned text) with **how it is written** (length, exclamation marks, capital letters, word repetition). A Linear SVM trained on a labeled fake-reviews dataset returns a REAL / FAKE verdict instantly in a web app.
+
+## Architecture
+
+```mermaid
+flowchart LR
+    R((Review text)) --> C[Text cleaning<br/>lowercase, punctuation,<br/>digits, stopwords]
+    R --> B[Behavioral features<br/>length, word count, '!',<br/>capital ratio, repetition]
+    C --> T[TF-IDF vectorizer]
+    T --> H[Combine features]
+    B --> H
+    H --> M[Linear SVM]
+    M --> O{{REAL / FAKE}}
 ```
-Summer_Olym_Project/
-├── app/
-│   ├── streamlit.py       # Main Streamlit application
-│   ├── config.py          # Configuration loader
-│   └── utils.py           # Helper functions
-├── data/                  # Datasets
-├── models/                # Trained ML models
-├── notebooks/             # Jupyter notebooks
-└── config.json            # Centralized configuration
-```
 
-## Installation
+## How it works
+
+1. **Cleaning:** lowercase, strip punctuation and digits, remove English stopwords (NLTK).
+2. **Text features:** the saved TF-IDF vectorizer turns the cleaned review into a sparse vector.
+3. **Writing-style features:** 5 numbers computed on the raw text (length, word count, `!` count, capital ratio, repetition ratio).
+4. **Classification:** both feature sets are stacked and passed to the trained Linear SVM.
+
+## Run it in one command
+
+Requires [Docker](https://docs.docker.com/get-docker/).
 
 ```bash
+git clone https://github.com/OussemaBouchaala/Fake_Real_Reviews_Classifier.git
+cd Fake_Real_Reviews_Classifier
+docker compose up --build
+```
+
+Open http://localhost:8501, paste a review and click **Predict**.
+
+<details>
+<summary>Run without Docker</summary>
+
+```bash
+python -m venv venv && source venv/bin/activate   # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 python -m nltk.downloader stopwords
-```
-
-## Usage
-
-```bash
 cd app
 streamlit run streamlit.py
 ```
+</details>
 
-## How It Works
+## Project structure
 
-1. **Text Preprocessing**: Removes punctuation, numbers, and stopwords
-2. **Feature Extraction**: 
-   - TF-IDF features from cleaned text
-   - Behavioral features (length, capitals, repetition)
-3. **Classification**: Combined features fed to SVM model
-4. **Prediction**: Returns REAL or FAKE review classification
+```
+├── app/
+│   ├── streamlit.py       # Web app: cleaning, features, prediction
+│   ├── text_features.py   # Feature helpers
+│   ├── config.py          # Paths loaded from config.json
+│   └── utils.py
+├── data/                  # Labeled fake reviews dataset
+├── models/                # TF-IDF vectorizer and Linear SVM models
+├── notebooks/             # EDA, preprocessing and model benchmarking
+├── config.json            # Central path configuration
+├── Dockerfile
+└── docker-compose.yml
+```
 
-## Technologies
+## Tech stack
 
-- Python 3.x
-- Streamlit
-- scikit-learn
-- NLTK
-- NumPy & SciPy
+Python · scikit-learn (TF-IDF, Linear SVM) · NLTK · NumPy / SciPy · Streamlit · Docker
