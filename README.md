@@ -1,6 +1,7 @@
 <h1 align="center">🕵️ Fake Review Detector</h1>
 <p align="center">Paste a product review and find out if it looks <b>real</b> or <b>computer-generated / fake</b>.<br/>
 <b>Python · NLP · scikit-learn · NLTK · Streamlit · Docker</b></p>
+<p align="center"><a href="https://fakerealreviewsclassifier.streamlit.app/"><b>▶ Try the live demo</b></a></p>
 
 ---
 
