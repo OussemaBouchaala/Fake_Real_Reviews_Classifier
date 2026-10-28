@@ -17,7 +17,12 @@ tfidf = joblib.load(app_dir / TFIDF_VECTORIZER)
 model = joblib.load(app_dir / SVM_MODEL)
 
 # -------- Stopwords --------
-stop_words = set(stopwords.words("english"))
+try:
+    stop_words = set(stopwords.words("english"))
+except LookupError:  # corpus missing (e.g. Streamlit Cloud): fetch it once
+    import nltk
+    nltk.download("stopwords", quiet=True)
+    stop_words = set(stopwords.words("english"))
 
 # -------- Text cleaning (for TF-IDF) --------
 def clean_text(text):
