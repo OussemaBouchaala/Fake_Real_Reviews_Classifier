@@ -1,6 +1,6 @@
 <h1 align="center">🕵️ Fake Review Detector</h1>
 <p align="center">Paste a product review and find out if it looks <b>real</b> or <b>computer-generated / fake</b>.<br/>
-<b>Python · NLP · scikit-learn · Streamlit · Docker · pytest</b></p>
+<b>Python · NLP · scikit-learn · Streamlit · FastAPI · Docker · pytest</b></p>
 <p align="center"><a href="https://fakerealreviewsclassifier.streamlit.app/"><b>▶ Try the live demo</b></a></p>
 
 ---
@@ -36,14 +36,32 @@ Everything below is one scikit-learn `Pipeline` (trained in `notebooks/pipeline.
 3. **Writing-style features:** 6 numbers computed on the raw text (length, word count, `!` count, capital ratio, repetition, mean word length), standardised.
 4. **Classification:** both feature sets are combined and passed to a Linear SVM.
 
-## Tests
+## HTTP API
+
+The same pipeline is also served by a small FastAPI app (`app/api.py`):
 
 ```bash
-pip install pytest pytest-cov
-pytest tests --cov=app --cov-report=term-missing
+cd app
+uvicorn api:app --port 8000    # interactive docs: http://localhost:8000/docs
+curl -X POST localhost:8000/predict -H "Content-Type: application/json" -d '{"text": "BEST PRODUCT EVER!!! BUY NOW!!!"}'
+# {"label":"FAKE"}
 ```
 
-Unit tests cover the text cleaning, every behavioral feature, the prediction helper (with a fake model) and config loading (with `open` mocked by `monkeypatch`). `streamlit.py` is UI glue and is not unit-tested.
+| Endpoint | Purpose |
+|---|---|
+| `GET /health` | Process is alive (Kubernetes liveness probe) |
+| `GET /ready` | Model is loaded, traffic can be sent (readiness probe); `503` until then |
+| `POST /predict` | `{"text": "..."}` → `{"label": "REAL" \| "FAKE"}`; empty or non-string text → `422` |
+
+## Tests and type checks
+
+```bash
+pip install -r requirements-dev.txt
+pytest tests --cov=app --cov-report=term-missing
+mypy        # settings in mypy.ini
+```
+
+Unit tests cover the text cleaning, every behavioral feature, the prediction helper (with a fake model), config loading (with `open` mocked by `monkeypatch`) and every API endpoint (with the model file mocked). `streamlit.py` is UI glue and is not unit-tested.
 
 <img src="docs/coverage.png" alt="pytest coverage report: 100% for config.py, text_features.py and utils.py" width="560">
 
@@ -75,6 +93,7 @@ streamlit run streamlit.py
 ```
 ├── app/
 │   ├── streamlit.py       # Web app: loads the trained pipeline and predicts
+│   ├── api.py             # FastAPI: /health, /ready, /predict
 │   ├── text_features.py   # Cleaning, behavioral features, prediction helper
 │   ├── config.py          # Paths loaded from config.json
 │   └── utils.py
@@ -89,4 +108,4 @@ streamlit run streamlit.py
 
 ## Tech stack
 
-Python · scikit-learn (Pipeline, TF-IDF, Linear SVM) · NumPy · pandas · Streamlit · Docker · pytest
+Python · scikit-learn (Pipeline, TF-IDF, Linear SVM) · NumPy · pandas · Streamlit · FastAPI · pydantic · Docker · pytest · mypy
