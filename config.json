@@ -9,6 +9,7 @@
     "tfidf_vectorizer": "../models/tfidf_vectorizer.pkl",
     "svm_model": "../models/linear_svm_model_adv.pkl",
     "svm_model_basic": "../models/linear_svm_model.pkl",
+    "review_pipeline": "../models/review_pipeline.joblib",
     "notebook": "../notebooks/notebook.ipynb"
   }
 }

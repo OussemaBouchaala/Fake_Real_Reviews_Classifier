@@ -1,48 +1,24 @@
 import streamlit as st
 import joblib
-import re
-import string
-import numpy as np
-from nltk.corpus import stopwords
-from scipy.sparse import hstack
 from pathlib import Path
 
 # Import centralized configuration
-from config import TFIDF_VECTORIZER, SVM_MODEL
+from config import REVIEW_PIPELINE
+from text_features import predict_label
 
-# -------- Load model & vectorizer --------
+# -------- Load the trained pipeline --------
+# One scikit-learn Pipeline does cleaning, TF-IDF, behavioral features, scaling and the Linear SVM
+# (trained in notebooks/pipeline.ipynb), so the app can't drift from the training code.
 # config.json paths are relative to the app/ folder
 app_dir = Path(__file__).parent
-tfidf = joblib.load(app_dir / TFIDF_VECTORIZER)
-model = joblib.load(app_dir / SVM_MODEL)
 
-# -------- Stopwords --------
-try:
-    stop_words = set(stopwords.words("english"))
-except LookupError:  # corpus missing (e.g. Streamlit Cloud): fetch it once
-    import nltk
-    nltk.download("stopwords", quiet=True)
-    stop_words = set(stopwords.words("english"))
 
-# -------- Text cleaning (for TF-IDF) --------
-def clean_text(text):
-    text = text.lower()
-    text = text.translate(str.maketrans("", "", string.punctuation))
-    text = re.sub(r"\d+", "", text)
-    text = " ".join(word for word in text.split() if word not in stop_words)
-    text = re.sub(r"\s+", " ", text).strip()
-    return text
+@st.cache_resource
+def load_model():
+    return joblib.load(app_dir / REVIEW_PIPELINE)
 
-# -------- Behavioral feature extraction (RAW text) --------
-def extract_behavior_features(text):
-    words = text.split()
-    return np.array([
-        len(text),                                  # length
-        len(words),                                 # 2. word count
-        text.count("!"),                            # exclamations
-        sum(1 for c in text if c.isupper()) / max(len(text), 1),  # capital ratio
-        len(words) / max(len(set(words)), 1)        # repetition ratio
-    ]).reshape(1, -1)
+
+model = load_model()
 
 # -------- Streamlit UI --------
 st.set_page_config(page_title="Fake Review Detector", layout="centered")
@@ -58,21 +34,7 @@ user_input = st.text_area("Paste a review below:", height=150)
 if st.button("Predict"):
     if user_input.strip() == "":
         st.warning("Please enter a review.")
+    elif predict_label(model, user_input) == "REAL":
+        st.success("✅ REAL REVIEW")
     else:
-        # TF-IDF features
-        cleaned = clean_text(user_input)
-        X_text = tfidf.transform([cleaned])
-
-        # Behavioral features
-        X_behav = extract_behavior_features(user_input)
-
-        # Combine
-        X_final = hstack([X_text, X_behav])
-
-        # Predict
-        prediction = model.predict(X_final)
-
-        if prediction[0] == 1:
-            st.success("✅ REAL REVIEW")
-        else:
-            st.error("❌ FAKE REVIEW")
+        st.error("❌ FAKE REVIEW")

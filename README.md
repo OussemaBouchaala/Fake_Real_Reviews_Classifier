@@ -1,6 +1,6 @@
 <h1 align="center">🕵️ Fake Review Detector</h1>
 <p align="center">Paste a product review and find out if it looks <b>real</b> or <b>computer-generated / fake</b>.<br/>
-<b>Python · NLP · scikit-learn · NLTK · Streamlit · Docker</b></p>
+<b>Python · NLP · scikit-learn · Streamlit · Docker · pytest</b></p>
 <p align="center"><a href="https://fakerealreviewsclassifier.streamlit.app/"><b>▶ Try the live demo</b></a></p>
 
 ---
@@ -18,20 +18,34 @@ A lightweight NLP classifier that combines **what a review says** (TF-IDF on cle
 ```mermaid
 flowchart LR
     R((Review text)) --> C[Text cleaning<br/>lowercase, punctuation,<br/>digits, stopwords]
-    R --> B[Behavioral features<br/>length, word count, '!',<br/>capital ratio, repetition]
+    R --> B[Behavioral features<br/>length, word count, '!', capitals,<br/>repetition, mean word length]
     C --> T[TF-IDF vectorizer]
+    B --> S[Standard scaler]
     T --> H[Combine features]
-    B --> H
+    S --> H
     H --> M[Linear SVM]
     M --> O{{REAL / FAKE}}
 ```
 
 ## How it works
 
-1. **Cleaning:** lowercase, strip punctuation and digits, remove English stopwords (NLTK).
-2. **Text features:** the saved TF-IDF vectorizer turns the cleaned review into a sparse vector.
-3. **Writing-style features:** 5 numbers computed on the raw text (length, word count, `!` count, capital ratio, repetition ratio).
-4. **Classification:** both feature sets are stacked and passed to the trained Linear SVM.
+Everything below is one scikit-learn `Pipeline` (trained in `notebooks/pipeline.ipynb`, saved as `models/review_pipeline.joblib`), so the app runs exactly the code it was trained with.
+
+1. **Cleaning:** lowercase, strip punctuation and digits, remove English stop words (`app/text_features.py`).
+2. **Text features:** TF-IDF (unigrams + bigrams) on the cleaned review.
+3. **Writing-style features:** 6 numbers computed on the raw text (length, word count, `!` count, capital ratio, repetition, mean word length), standardised.
+4. **Classification:** both feature sets are combined and passed to a Linear SVM.
+
+## Tests
+
+```bash
+pip install pytest pytest-cov
+pytest tests --cov=app --cov-report=term-missing
+```
+
+Unit tests cover the text cleaning, every behavioral feature, the prediction helper (with a fake model) and config loading (with `open` mocked by `monkeypatch`). `streamlit.py` is UI glue and is not unit-tested.
+
+<img src="docs/coverage.png" alt="pytest coverage report: 100% for config.py, text_features.py and utils.py" width="560">
 
 ## Run it in one command
 
@@ -51,7 +65,6 @@ Open http://localhost:8501, paste a review and click **Predict**.
 ```bash
 python -m venv venv && source venv/bin/activate   # Windows: venv\Scripts\activate
 pip install -r requirements.txt
-python -m nltk.downloader stopwords
 cd app
 streamlit run streamlit.py
 ```
@@ -61,12 +74,13 @@ streamlit run streamlit.py
 
 ```
 ├── app/
-│   ├── streamlit.py       # Web app: cleaning, features, prediction
-│   ├── text_features.py   # Feature helpers
+│   ├── streamlit.py       # Web app: loads the trained pipeline and predicts
+│   ├── text_features.py   # Cleaning, behavioral features, prediction helper
 │   ├── config.py          # Paths loaded from config.json
 │   └── utils.py
 ├── data/                  # Labeled fake reviews dataset
-├── models/                # TF-IDF vectorizer and Linear SVM models
+├── models/                # review_pipeline.joblib (used by the app) + older models
+├── tests/                 # pytest unit tests
 ├── notebooks/             # EDA, preprocessing and model benchmarking
 ├── config.json            # Central path configuration
 ├── Dockerfile
@@ -75,4 +89,4 @@ streamlit run streamlit.py
 
 ## Tech stack
 
-Python · scikit-learn (TF-IDF, Linear SVM) · NLTK · NumPy / SciPy · Streamlit · Docker
+Python · scikit-learn (Pipeline, TF-IDF, Linear SVM) · NumPy · pandas · Streamlit · Docker · pytest
