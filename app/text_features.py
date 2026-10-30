@@ -45,3 +45,8 @@ def to_frame(texts):
     """Wrap raw review texts in the one-column DataFrame the pipeline expects."""
     import pandas as pd
     return pd.DataFrame({"text": [str(t) for t in texts]})
+
+
+def predict_label(model, text):
+    """Classify one review with the trained pipeline: "REAL" (label 1) or "FAKE" (label 0)."""
+    return "REAL" if model.predict([text])[0] == 1 else "FAKE"

@@ -13,6 +13,7 @@ APP_DIR = _config['paths']['app_dir']
 TFIDF_VECTORIZER = _config['paths']['tfidf_vectorizer']
 SVM_MODEL = _config['paths']['svm_model']
 SVM_MODEL_BASIC = _config['paths']['svm_model_basic']
+REVIEW_PIPELINE = _config['paths']['review_pipeline']
 
 # Data file paths
 FAKE_REVIEWS_DATASET = _config['paths']['fake_reviews_dataset']
